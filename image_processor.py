@@ -1,17 +1,15 @@
 import cv2
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtWidgets import QFileDialog
 import numpy as np
 from Open_Image import get_image
 
 
-def convert_CVT():
-    img = picture
-    new_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray_pixmap = convert_to_pixmap(image=new_image)
-    return show_image(gray_pixmap)
-    
+def convert_CVT(image=None):
+    if image.ndim == 2:
+        return image
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 
 def show_image(image=None) -> QPixmap:
     if not isinstance(image, QPixmap):
@@ -24,42 +22,50 @@ def show_image(image=None) -> QPixmap:
     )
 
 
-def get_imageFromLabel(parent=None, label=None):
-    return label, parent
 
 
-def save_image(picture1, parent=None):
-    if not picture1:
+def save_image(image_name,image_tosave=None):
+    if image_tosave is None:
         return 
-    pixmap = picture1
-    if not isinstance(pixmap, QPixmap):
-        return 
-    file_name, _ = QFileDialog.getSaveFileName(
-        parent,
-        "Save your Image",
-        "",
-        "Images (*.png *.jpeg *.jpg);;All Files (*)"
-    )
-    if file_name:
-        pixmap.save(file_name)
+    if image_name is None or image_name == "":
+        image_name = "saved_image.png"
+    if image_name[-4:] != ".png":
+        image_name += ".png"
+    return cv2.imwrite(image_name, image_tosave)
 
 
 
 def convert_to_pixmap(image = None):
-    if isinstance(image, np.ndarray):
-        img = image
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        h, w, ch = img.shape
+    if image is None:
+        return None
 
+    if image.ndim == 2:
+        h, w = image.shape
+
+        qimage = QImage(
+            image.data,
+            w,
+            h,
+            image.strides[0],
+            QImage.Format.Format_Grayscale8
+        ).copy()
+    else:
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)    # Here we are converting Opencv BGR image to RGB.
+                                                        # Since PySide6 excepts RGB format for QImage. Also, we are converting the image to contiguous array to avoid memory issues.
+                                                        # If used BGR to display the color will come out wrong. So, we need to convert it to RGB format.
+        
+        img = np.ascontiguousarray(img) # This will store the image in contiguous memory block. This is important for QImage to work properly. If we don't do this, we will get a segmentation fault error.
+                                        # This will basically preserve the original image data in the memory in a contigous block. If the data is non-contigous then it will create one and copy the data to it.
+        h, w, ch = img.shape
         qimage = QImage(
             img.data,
             w,
             h,
             ch * w,
             QImage.Format.Format_RGB888
-        )
-        pixmap = QPixmap.fromImage(qimage)
-        return pixmap
+        ).copy()
+
+    return QPixmap.fromImage(qimage)
 
 
 
@@ -69,4 +75,7 @@ def open_image(parent=None):
     img, loc = get_image(parent)
     picture = img       # Image Matrix in ndarray
     path = loc          # Image Path
-    return show_image(convert_to_pixmap(picture))
+    if img is None:
+        return None, None
+    
+    return img, loc

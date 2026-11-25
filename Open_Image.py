@@ -11,9 +11,13 @@ def get_image(parent=None):
         "",
         "Images (*.png *.jpg *.jpeg *.gif);;All Files (*)"
     )
-    path = cv2.imread(name)
-    if name:
-        return path,name
-    return None 
+    if name is None:
+        return None, None
+    
+    image = cv2.imread(name)
 
+    if image is None:
+        return None, None
+
+    return image, name
 

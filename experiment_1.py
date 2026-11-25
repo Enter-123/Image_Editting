@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 import sys 
-from image_processor import *
+from image_processor import convert_CVT, convert_to_pixmap, save_image, open_image
 
 
 class MainWindow(QMainWindow):
@@ -9,13 +9,16 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Getting Started with OpenCV")
-        self.resize(500, 350)
+        self.resize(1000, 550)
 
         self.container = QWidget()
         self.setCentralWidget(self.container)
 
+        self.original_image = None
+        self.current_image = None
 
         self.image = QLabel("Select a Image to Display")   # Objects are mutable
+        self.image_name = QLineEdit("Enter Image Name")   # Objects are mutable
 
 
         self.open_image_button = QPushButton("Open Image")
@@ -25,10 +28,16 @@ class MainWindow(QMainWindow):
         self.undo_button = QPushButton("Undo")
 
         
-        self.save_image_button.clicked.connect(lambda : save_image(self.image.pixmap(), self))
+        self.save_image_button.clicked.connect(lambda : save_image(self.image_name.text(), self.current_image))
         self.open_image_button.clicked.connect(self.display_image)
         self.close_image.clicked.connect(self.clear_buttonImage)
         self.gray_convert_button.clicked.connect(self.gray_conversion)
+        self.undo_button.clicked.connect(lambda : self.image.setPixmap(convert_to_pixmap(self.original_image).scaled(
+            650,
+            650,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )))
 
 
         self.close_image.setEnabled(False)
@@ -49,9 +58,10 @@ class MainWindow(QMainWindow):
 
         self.v1_layout.addWidget(self.open_image_button)
         self.v1_layout.addWidget(self.gray_convert_button)
-        self.v1_layout.addWidget(QPushButton("Button 3"))
+        self.v1_layout.addWidget(self.undo_button)
         self.v3_layout.addWidget(self.close_image)
         self.v3_layout.addWidget(self.save_image_button)
+        self.v3_layout.addWidget(self.image_name)
         self.v3_layout.addWidget(QPushButton("Button 6"))
 
         self.main_layout.addLayout(self.v1_layout, 1)
@@ -61,7 +71,9 @@ class MainWindow(QMainWindow):
         self.container.setLayout(self.main_layout)
 
     def gray_conversion(self):
-        pixmap = convert_CVT()
+        self.current_image = convert_CVT(self.current_image)
+
+        pixmap = convert_to_pixmap(self.current_image)
         self.image.setPixmap(
             pixmap.scaled(
                 650,
@@ -80,7 +92,16 @@ class MainWindow(QMainWindow):
          
 
     def display_image(self):
-        pixmap = open_image(self)
+        pixmap, loc = open_image(self)
+        if pixmap is None:
+            return None
+
+        self.original_image = pixmap.copy()
+        self.current_image = pixmap.copy()
+        self.image_path = loc
+
+        pixmap = convert_to_pixmap(self.current_image)
+
         self.image.setPixmap(
             pixmap.scaled(
                 650,
