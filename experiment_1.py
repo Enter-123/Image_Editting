@@ -16,9 +16,10 @@ class MainWindow(QMainWindow):
 
         self.original_image = None
         self.current_image = None
+        self.image_path = None
 
         self.image = QLabel("Select a Image to Display")   # Objects are mutable
-        self.image_name = QLineEdit("Enter Image Name")   # Objects are mutable
+        self.image_name = QLineEdit(placeholderText="Enter Image Name")   # Objects are mutable
 
 
         self.open_image_button = QPushButton("Open Image")
@@ -32,24 +33,19 @@ class MainWindow(QMainWindow):
         self.open_image_button.clicked.connect(self.display_image)
         self.close_image.clicked.connect(self.clear_buttonImage)
         self.gray_convert_button.clicked.connect(self.gray_conversion)
-        self.undo_button.clicked.connect(lambda : self.image.setPixmap(convert_to_pixmap(self.original_image).scaled(
-            650,
-            650,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )))
+        self.undo_button.clicked.connect(lambda : self.undo_image())
 
 
         self.close_image.setEnabled(False)
         self.gray_convert_button.setEnabled(False)
         self.save_image_button.setEnabled(False)
+        self.undo_button.setEnabled(False)
 
 
         self.main_layout = QHBoxLayout()
         self.v1_layout = QVBoxLayout()
         self.v2_layout = QVBoxLayout()
         self.v3_layout = QVBoxLayout()
-        self.setCentralWidget(self.container)
 
         self.v2_layout.addWidget(QLabel("Image Processing Application"), alignment=Qt.AlignmentFlag.AlignCenter)
         self.v2_layout.addStretch()    
@@ -70,6 +66,22 @@ class MainWindow(QMainWindow):
 
         self.container.setLayout(self.main_layout)
 
+    def undo_image(self):
+        if self.original_image is None:
+            return None
+
+        self.current_image = self.original_image.copy()
+        pixmap = convert_to_pixmap(self.current_image)
+        self.image.setPixmap(
+            pixmap.scaled(
+                650,
+                650,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+        )
+
+
     def gray_conversion(self):
         self.current_image = convert_CVT(self.current_image)
 
@@ -86,18 +98,22 @@ class MainWindow(QMainWindow):
 
     def clear_buttonImage(self):
         self.image.setText("Select a Image to Display")
+        self.current_image = None
+        self.original_image = None
+        self.image_path = None
         self.close_image.setEnabled(False)
         self.gray_convert_button.setEnabled(False)
         self.save_image_button.setEnabled(False)
+        self.undo_button.setEnabled(False)
          
 
     def display_image(self):
-        pixmap, loc = open_image(self)
-        if pixmap is None:
+        img, loc = open_image(self)
+        if img is None:
             return None
 
-        self.original_image = pixmap.copy()
-        self.current_image = pixmap.copy()
+        self.original_image = img.copy()
+        self.current_image = img.copy()
         self.image_path = loc
 
         pixmap = convert_to_pixmap(self.current_image)
@@ -113,6 +129,7 @@ class MainWindow(QMainWindow):
         self.close_image.setEnabled(True)
         self.gray_convert_button.setEnabled(True)
         self.save_image_button.setEnabled(True)
+        self.undo_button.setEnabled(True)
 
 app = QApplication(sys.argv)
 window = MainWindow()

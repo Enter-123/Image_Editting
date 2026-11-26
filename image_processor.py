@@ -1,35 +1,26 @@
 import cv2
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap
 import numpy as np
 from Open_Image import get_image
 
 
 def convert_CVT(image=None):
-    if image.ndim == 2:
-        return image
+    if image is None:
+        return None
+
+    if image.ndim == 2:     # This means the image is already in grayscale format. So, we don't need to convert it again.
+        return image        # The return image will return the same image.
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-
-def show_image(image=None) -> QPixmap:
-    if not isinstance(image, QPixmap):
-        return
-    return image.scaled(
-        650,
-        650,
-        Qt.AspectRatioMode.KeepAspectRatio,
-        Qt.TransformationMode.SmoothTransformation
-    )
-
 
 
 
 def save_image(image_name,image_tosave=None):
     if image_tosave is None:
         return 
-    if image_name is None or image_name == "":
+    if not image_name.strip():
         image_name = "saved_image.png"
-    if image_name[-4:] != ".png":
+        
+    if not image_name.lower().endswith((".png", ".jpg", ".jpeg")):
         image_name += ".png"
     return cv2.imwrite(image_name, image_tosave)
 
@@ -70,12 +61,7 @@ def convert_to_pixmap(image = None):
 
 
 def open_image(parent=None):
-    global path 
-    global picture
     img, loc = get_image(parent)
-    picture = img       # Image Matrix in ndarray
-    path = loc          # Image Path
     if img is None:
         return None, None
-    
     return img, loc

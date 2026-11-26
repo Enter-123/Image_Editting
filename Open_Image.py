@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import *
-from PySide6.QtGui import *
 import cv2
 # from experiment_1 import window
 
@@ -9,9 +8,9 @@ def get_image(parent=None):
         parent,
         "Select a Image File",
         "",
-        "Images (*.png *.jpg *.jpeg *.gif);;All Files (*)"
+        "Images (*.png *.jpg *.jpeg);;All Files (*)"
     )
-    if name is None:
+    if not name:
         return None, None
     
     image = cv2.imread(name)
