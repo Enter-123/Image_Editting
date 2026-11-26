@@ -18,17 +18,23 @@ class MainWindow(QMainWindow):
         self.current_image = None
         self.image_path = None
 
-        self.image = QLabel("Select a Image to Display")   # Objects are mutable
+        self.original_image_label = QLabel("Select a Image to Edit")   # Objects are mutable
+        self.edited_image_label = QLabel("Select a Image to Preview")   # Objects are mutable
         self.image_name = QLineEdit(placeholderText="Enter Image Name")   # Objects are mutable
 
+        # Sliders
+        self.red = QSlider(minimum=0, maximum=255, orientation=Qt.Orientation.Horizontal)
+        self.green = QSlider(minimum=0, maximum=255, orientation=Qt.Orientation.Horizontal)
+        self.blue = QSlider(minimum=0, maximum=255, orientation=Qt.Orientation.Horizontal)
 
+        # Buttons
         self.open_image_button = QPushButton("Open Image")
         self.close_image = QPushButton("Close Image")
         self.gray_convert_button = QPushButton("Convert to Gray Scale")
         self.save_image_button = QPushButton("Save Image")
         self.undo_button = QPushButton("Undo")
 
-        
+        # Connections
         self.save_image_button.clicked.connect(lambda : save_image(self.image_name.text(), self.current_image))
         self.open_image_button.clicked.connect(self.display_image)
         self.close_image.clicked.connect(self.clear_buttonImage)
@@ -45,12 +51,20 @@ class MainWindow(QMainWindow):
         self.main_layout = QHBoxLayout()
         self.v1_layout = QVBoxLayout()
         self.v2_layout = QVBoxLayout()
+        self.image_grid = QGridLayout()
         self.v3_layout = QVBoxLayout()
 
         self.v2_layout.addWidget(QLabel("Image Processing Application"), alignment=Qt.AlignmentFlag.AlignCenter)
-        self.v2_layout.addStretch()    
-        self.v2_layout.addWidget(self.image, alignment=Qt.AlignmentFlag.AlignCenter)
         self.v2_layout.addStretch()
+        self.v2_layout.addLayout(self.image_grid)
+
+        self.image_grid.addWidget(QLabel("Original Image"), 0, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.image_grid.addWidget(QLabel("Edited Image"), 0, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.image_grid.addWidget(self.original_image_label, 1, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.v2_layout.addStretch()
+        self.image_grid.addWidget(self.edited_image_label, 1, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.v2_layout.addStretch()
+
 
         self.v1_layout.addWidget(self.open_image_button)
         self.v1_layout.addWidget(self.gray_convert_button)
@@ -58,6 +72,12 @@ class MainWindow(QMainWindow):
         self.v3_layout.addWidget(self.close_image)
         self.v3_layout.addWidget(self.save_image_button)
         self.v3_layout.addWidget(self.image_name)
+        self.v2_layout.addWidget(QLabel("Red"))
+        self.v2_layout.addWidget(self.red)
+        self.v2_layout.addWidget(QLabel("Green"))
+        self.v2_layout.addWidget(self.green)
+        self.v2_layout.addWidget(QLabel("Blue"))
+        self.v2_layout.addWidget(self.blue)
         self.v3_layout.addWidget(QPushButton("Button 6"))
 
         self.main_layout.addLayout(self.v1_layout, 1)
@@ -72,7 +92,7 @@ class MainWindow(QMainWindow):
 
         self.current_image = self.original_image.copy()
         pixmap = convert_to_pixmap(self.current_image)
-        self.image.setPixmap(
+        self.edited_image_label.setPixmap(
             pixmap.scaled(
                 650,
                 650,
@@ -86,7 +106,7 @@ class MainWindow(QMainWindow):
         self.current_image = convert_CVT(self.current_image)
 
         pixmap = convert_to_pixmap(self.current_image)
-        self.image.setPixmap(
+        self.edited_image_label.setPixmap(
             pixmap.scaled(
                 650,
                 650,
@@ -97,7 +117,8 @@ class MainWindow(QMainWindow):
 
 
     def clear_buttonImage(self):
-        self.image.setText("Select a Image to Display")
+        self.edited_image_label.setText("Select a Image to Display")
+        self.original_image_label.setText("Select a Image to Display")
         self.current_image = None
         self.original_image = None
         self.image_path = None
@@ -118,10 +139,10 @@ class MainWindow(QMainWindow):
 
         pixmap = convert_to_pixmap(self.current_image)
 
-        self.image.setPixmap(
+        self.original_image_label.setPixmap(
             pixmap.scaled(
-                650,
-                650,
+                250,
+                250,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
             )
